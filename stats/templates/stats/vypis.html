@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <title>Liga mistrů - Statistiky</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; transition: all 0.3s ease; }
+
+        body {
+            margin: 0; padding: 20px; font-family: 'Inter', sans-serif;
+            background: radial-gradient(circle at top, #1a2a6c, #000000);
+            min-height: 100vh; display: flex; justify-content: center; align-items: center;
+            color: white;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.07); backdrop-filter: blur(25px);
+            border-radius: 35px; border: 1px solid rgba(255, 255, 255, 0.12);
+            padding: 40px; width: 480px; box-shadow: 0 30px 60px rgba(0,0,0,0.5);
+        }
+
+        h1, h2 { 
+            text-align: center; text-transform: uppercase; letter-spacing: 2px; font-weight: 600; margin: 0;
+        }
+        h1 { font-size: 22px; margin-bottom: 30px; }
+        h2 { font-size: 16px; color: #d4af37; margin: 30px 0 20px 0; }
+
+        /* --- SEZNAM HRÁČŮ --- */
+        .seznam { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .hrac-box {
+            background: rgba(255, 255, 255, 0.04); padding: 15px 20px; border-radius: 18px;
+            display: flex; justify-content: space-between; align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        .jmeno { font-size: 17px; font-weight: 600; display: block; }
+        .klub { color: rgba(255, 255, 255, 0.5); font-size: 11px; text-transform: uppercase; }
+        .skore { 
+            background: linear-gradient(135deg, #d4af37, #f9e27d); color: #000; 
+            width: 36px; height: 36px; display: flex; justify-content: center; 
+            align-items: center; border-radius: 10px; font-weight: 800;
+        }
+
+        /* --- FORMULÁŘ --- */
+        form { margin-top: 20px; }
+        input {
+            width: 100%; background: rgba(255, 255, 255, 0.08); border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 15px; border-radius: 15px; color: white; margin-bottom: 12px; font-size: 15px;
+        }
+        input::placeholder { color: rgba(255,255,255,0.4); }
+        
+        .btn-ulozit {
+            display: block; width: 100%; padding: 16px; border-radius: 18px; 
+            font-weight: 700; background: #d4af37; color: black; border: none;
+            cursor: pointer; font-size: 14px; text-transform: uppercase;
+        }
+        .btn-ulozit:hover { background: #f9e27d; transform: translateY(-2px); }
+
+        /* --- SÍŇ SLÁVY --- */
+        .grid-legendy {
+            display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px;
+        }
+        .legenda-btn {
+            background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px; border-radius: 15px; color: white; cursor: pointer;
+            font-size: 13px; font-weight: 600; text-align: center;
+        }
+        .legenda-btn:hover { background: rgba(212, 175, 55, 0.2); border-color: #d4af37; }
+
+        .karta-uspechu {
+            background: linear-gradient(145deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01));
+            border-radius: 20px; padding: 20px; border: 1px solid rgba(212, 175, 55, 0.3);
+            min-height: 100px; display: none; text-align: center;
+        }
+        #text-uspechu { font-size: 14px; line-height: 1.5; color: #f1f1f1; margin: 0; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Tabulka střelců</h1>
+        
+        <div class="seznam">
+            {% for hrac in hraci %}
+            <div class="hrac-box">
+                <div style="text-align: left;">
+                    <span class="jmeno">{{ hrac.jmeno }}</span>
+                    <span class="klub">{{ hrac.klub }}</span>
+                </div>
+                <div class="skore">{{ hrac.goly }}</div>
+            </div>
+            {% empty %}
+            <p style="text-align:center; opacity:0.5">Zatím žádná data</p>
+            {% endfor %}
+        </div>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="text" name="jmeno" placeholder="Jméno a příjmení" required>
+            <input type="text" name="klub" placeholder="Klub" required>
+            <input type="number" name="goly" placeholder="Počet gólů" required>
+            <button type="submit" class="btn-ulozit">PŘIDAT NOVÉHO STŘELCE</button>
+        </form>
+
+        <hr style="border: 0; border-top: 1px solid rgba(255,255,255,0.1); margin: 30px 0;">
+
+        <h2>Síň slávy</h2>
+        <div class="grid-legendy">
+            <div class="legenda-btn" onclick="ukaz('Messi')">Messi</div>
+            <div class="legenda-btn" onclick="ukaz('C. Ronaldo')">C. Ronaldo</div>
+            <div class="legenda-btn" onclick="ukaz('Neymar Jr')">Neymar Jr</div>
+            <div class="legenda-btn" onclick="ukaz('Lewandowski')">Lewandowski</div>
+        </div>
+
+        <div class="karta-uspechu" id="karta">
+            <p id="text-uspechu"></p>
+        </div>
+    </div>
+
+    <script>
+        function ukaz(hrac) {
+            const data = {
+                "Messi": "🇦🇷 <b>Lionel Messi:</b> 8x Zlatý míč, 1x Mistrovství Světa (2022), 2x Copa América, 4x Liga Mistru, 13x ligový titul.",
+                "C. Ronaldo": "🇵🇹 <b>C. Ronaldo:</b> 5x Zlatý míč, 1x EURO (2016), 5x Liga Mistrů, 7x ligový titul.",
+                "Neymar Jr": "🇧🇷 <b>Neymar Jr:</b> 1x Liga Mistrů, 7x ligový titul.",
+                "Lewandowski": "🇵🇱 <b>Lewandowski:</b> 1x Liga Mistrů, 14x ligový titul."
+            };
+
+            const karta = document.getElementById("karta");
+            const text = document.getElementById("text-uspechu");
+            
+            text.innerHTML = data[hrac];
+            karta.style.display = "block";
+            karta.style.animation = "fadeIn 0.5s";
+        }
+    </script>
+
+</body>
+</html>
